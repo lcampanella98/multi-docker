@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t lorenzocampanella/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true lorenzocampanella/react-test yarn test
+
+after_success:
+  - docker build -t lorenzocampanella/multi-client ./client
+  - docker build -t lorenzocampanella/multi-nginx ./nginx
+  - docker build -t lorenzocampanella/multi-server ./server
+  - docker build -t lorenzocampanella/multi-worker ./worker
+  # log in to the Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take images and push to docker hub
+  - docker push lorenzocampanella/multi-client
+  - docker push lorenzocampanella/multi-nginx
+  - docker push lorenzocampanella/multi-server
+  - docker push lorenzocampanella/multi-worker
